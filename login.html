@@ -4,36 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login Page</title>
-    <script>
-      function login() {
-        var username = document.getElementById('username').value;
-        var password = document.getElementById('password').value;
-        
-        google.script.run.withSuccessHandler(function(isLoggedIn) {
-          if (isLoggedIn) {
-            alert('Login successful!');
-            // Redirect or perform other actions upon successful login
-          } else {
-            alert('Invalid username or password!');
-          }
-        }).checkLogin(username, password);
-      }
-    </script>
 </head>
 <body>
     <h2>Login</h2>
-    <form>
+    <form id="loginForm">
         <label for="username">Username:</label><br>
         <input type="text" id="username" name="username"><br>
         <label for="password">Password:</label><br>
         <input type="password" id="password" name="password"><br><br>
-        <input type="button" value="Login" onclick="login()">
+        <input type="submit" value="Login">
     </form>
-    <script src="https://apis.google.com/js/api.js"></script>
     <script>
-      google.script.run.withSuccessHandler(function(html){
-        console.log(html);
-      }).getHtml();
+        document.getElementById("loginForm").addEventListener("submit", function(event) {
+            event.preventDefault(); // Prevent the form from submitting
+            
+            var username = document.getElementById("username").value;
+            var password = document.getElementById("password").value;
+            
+            google.script.run.withSuccessHandler(function(isLoggedIn) {
+                if (isLoggedIn) {
+                    alert("Login successful!");
+                    // Redirect or perform other actions upon successful login
+                } else {
+                    alert("Invalid username or password!");
+                }
+            }).checkLogin(username, password);
+        });
     </script>
 </body>
 </html>
