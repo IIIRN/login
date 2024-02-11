@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Write a Post</title>
+  <!-- Include Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 p-4">
+  <div class="max-w-3xl mx-auto bg-white p-8 rounded shadow-md">
+    <h2 class="text-2xl font-semibold mb-6">Write a Post</h2>
+
+    <!-- Post Form -->
+    <form id="postForm" class="space-y-4">
+      <div>
+        <label for="title" class="block text-gray-700">Title:</label>
+        <input type="text" id="title" name="title" class="form-input mt-1 block w-full" required>
+      </div>
+      <div>
+        <label for="cover" class="block text-gray-700">Cover Image URL:</label>
+        <input type="url" id="cover" name="cover" class="form-input mt-1 block w-full">
+      </div>
+      <div>
+        <label for="content" class="block text-gray-700">Content:</label>
+        <textarea id="content" name="content" rows="5" class="form-textarea mt-1 block w-full" required></textarea>
+      </div>
+      <div>
+        <label for="point" class="block text-gray-700">Point Cost:</label>
+        <input type="number" id="point" name="point" class="form-input mt-1 block w-full" required>
+      </div>
+      <div>
+        <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded mt-2 hover:bg-blue-600">Submit</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Include Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+  <script>
+    // Initialize Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyBEfZKPxqf75KYyi9AWnSwTEoXB_CUIGp0",
+        authDomain: "iiirn-a9b4c.firebaseapp.com",
+        databaseURL: "https://iiirn-a9b4c-default-rtdb.firebaseio.com",
+        projectId: "iiirn-a9b4c",
+        storageBucket: "iiirn-a9b4c.appspot.com",
+        messagingSenderId: "453527572957",
+        appId: "1:453527572957:web:5a28039533fbef81a8e634",
+        measurementId: "G-YLM6GQD6Y0"
+    };
+    firebase.initializeApp(firebaseConfig);
+
+    const database = firebase.database();
+
+    // Handle form submission
+    const postForm = document.getElementById('postForm');
+    postForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      // Get form values
+      const title = postForm.title.value;
+      const cover = postForm.cover.value;
+      const content = postForm.content.value;
+      const point = parseInt(postForm.point.value);
+
+      // Save post data to Firebase Realtime Database
+      savePost(title, cover, content, point);
+    });
+
+    // Function to save post data to Firebase Realtime Database
+    function savePost(title, cover, content, point) {
+      const postsRef = database.ref('posts');
+      postsRef.push({
+        title: title,
+        cover: cover,
+        content: content,
+        point: point
+      }).then(() => {
+        console.log('Post created successfully:', title);
+        // Redirect or display success message as needed
+      }).catch((error) => {
+        console.error('Error creating post:', error);
+      });
+    }
+  </script>
+</body>
+</html>
