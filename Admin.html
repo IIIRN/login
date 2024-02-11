@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard</title>
+  <!-- Include Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 p-4">
+  <div class="max-w-3xl mx-auto bg-white p-8 rounded shadow-md">
+    <h2 class="text-2xl font-semibold mb-6">Admin Dashboard</h2>
+
+    <!-- User List -->
+    <div id="userList" class="mb-6">
+      <h3 class="text-xl font-semibold mb-4">User List</h3>
+      <table class="w-full border-collapse border border-gray-300">
+        <thead>
+          <tr class="bg-gray-200">
+            <th class="border border-gray-300 px-4 py-2">Email</th>
+            <th class="border border-gray-300 px-4 py-2">Points</th>
+            <th class="border border-gray-300 px-4 py-2">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="userListBody">
+          <!-- User list will be populated here -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- User Details and Points Update Form -->
+    <div id="userDetails" class="hidden">
+      <h3 class="text-xl font-semibold mb-4">User Details</h3>
+      <p><strong>User ID:</strong> <span id="userId"></span></p>
+      <p><strong>Email:</strong> <span id="userEmail"></span></p>
+      <p><strong>Points:</strong> <span id="userPoints"></span></p>
+      
+      <!-- Form to update user's points -->
+      <form id="updatePointsForm" class="mt-4">
+        <label for="newPoints" class="block text-gray-700">New Points:</label>
+        <input type="number" id="newPoints" name="newPoints" class="form-input mt-1 block w-full" required>
+        <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded mt-2 hover:bg-blue-600">Update Points</button>
+      </form>
+
+      <!-- Form to edit user's details -->
+      <form id="editUserForm" class="mt-4">
+        <label for="editEmail" class="block text-gray-700">Email:</label>
+        <input type="email" id="editEmail" name="editEmail" class="form-input mt-1 block w-full" required>
+        <!-- Add more fields for other user details -->
+        <button type="submit" class="bg-green-500 text-white py-2 px-4 rounded mt-2 hover:bg-green-600">Save Changes</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Include Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+  <script>
+    // Initialize Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyBEfZKPxqf75KYyi9AWnSwTEoXB_CUIGp0",
+        authDomain: "iiirn-a9b4c.firebaseapp.com",
+        databaseURL: "https://iiirn-a9b4c-default-rtdb.firebaseio.com",
+        projectId: "iiirn-a9b4c",
+        storageBucket: "iiirn-a9b4c.appspot.com",
+        messagingSenderId: "453527572957",
+        appId: "1:453527572957:web:5a28039533fbef81a8e634",
+        measurementId: "G-YLM6GQD6Y0"    };
+    firebase.initializeApp(firebaseConfig);
+
+    const database = firebase.database();
+
+    // Fetch user data and display in the admin dashboard
+    function fetchUserData() {
+      const userListBody = document.getElementById('userListBody');
+
+      // Clear previous data
+      userListBody.innerHTML = '';
+
+      // Fetch user data from Firebase Realtime Database
+      const usersRef = database.ref('users');
+      usersRef.once('value')
+        .then((snapshot) => {
+          const users = snapshot.val();
+
+          // Display user list
+          Object.keys(users).forEach((userId) => {
+            const user = users[userId];
+            const row = document.createElement('tr');
+
+            // Email
+            const emailCell = document.createElement('td');
+            emailCell.textContent = user.email;
+            emailCell.classList.add('border', 'border-gray-300', 'px-4', 'py-2');
+            row.appendChild(emailCell);
+
+            // Points
+            const pointsCell = document.createElement('td');
+            pointsCell.textContent = user.points;
+            pointsCell.classList.add('border', 'border-gray-300', 'px-4', 'py-2');
+            row.appendChild(pointsCell);
+
+            // Actions (Edit and Delete)
+            const actionsCell = document.createElement('td');
+            actionsCell.classList.add('border', 'border-gray-300', 'px-4', 'py-2');
+
+            // Edit button
+            const editButton = document.createElement('button');
+            editButton.textContent = 'Edit';
+            editButton.classList.add('bg-blue-500', 'text-white', 'py-1', 'px-2', 'rounded', 'mr-2', 'hover:bg-blue-600');
+            editButton.addEventListener('click', () => {
+              showUserDetails(userId, user.email, user.points);
+            });
+            actionsCell.appendChild(editButton);
+
+            // Delete button
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = 'Delete';
+            deleteButton.classList.add('bg-red-500', 'text-white', 'py-1', 'px-2', 'rounded', 'hover:bg-red-600');
+            deleteButton.addEventListener('click', () => {
+              deleteUser(userId);
+            });
+            actionsCell.appendChild(deleteButton);
+
+            row.appendChild(actionsCell);
+
+            userListBody.appendChild(row);
+          });
+        })
+        .catch((error) => {
+          console.error('Error fetching user data:', error);
+        });
+    }
+
+    // Display user details and points update form
+    function showUserDetails(userId, userEmail, userPoints) {
+      const userDetailsDiv = document.getElementById('userDetails');
+      const userIdSpan = document.getElementById('userId');
+      const userEmailInput = document.getElementById('editEmail');
+      const userPointsSpan = document.getElementById('userPoints');
+
+      // Update user details
+      userIdSpan.textContent = userId;
+      userEmailInput.value = userEmail;
+      userPointsSpan.textContent = userPoints;
+
+      // Show user details and points update form
+      userDetailsDiv.classList.remove('hidden');
+
+      // Add submit event to points update form
+      const updatePointsForm = document.getElementById('updatePointsForm');
+      updatePointsForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const newPoints = parseInt(document.getElementById('newPoints').value);
+
+        // Update user's points in the database
+        updatePoints(userId, newPoints);
+      });
+
+      // Add submit event to edit user form
+      const editUserForm = document.getElementById('editUserForm');
+      editUserForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const newEmail = document.getElementById('editEmail').value;
+
+        // Update user's email in the database
+        editUserEmail(userId, newEmail);
+      });
+    }
+
+    // Function to update user's points
+    function updatePoints(userId, newPoints) {
+      const userRef = database.ref('users/' + userId);
+      userRef.update({
+        points: newPoints
+      }).then(() => {
+        console.log('Points updated successfully for user:', userId);
+        // Refresh user data after updating points
+        fetchUserData();
+      }).catch((error) => {
+        console.error('Error updating points:', error);
+      });
+    }
+
+    // Function to update user's email
+    function editUserEmail(userId, newEmail) {
+      const userRef = database.ref('users/' + userId);
+      userRef.update({
+        email: newEmail
+      }).then(() => {
+        console.log('Email updated successfully for user:', userId);
+        // Refresh user data after updating email
+        fetchUserData();
+      }).catch((error) => {
+        console.error('Error updating email:', error);
+      });
+    }
+
+    // Function to delete user
+    function deleteUser(userId) {
+      const userRef = database.ref('users/' + userId);
+      userRef.remove()
+        .then(() => {
+          console.log('User deleted successfully:', userId);
+          // Refresh user data after deleting user
+          fetchUserData();
+        })
+        .catch((error) => {
+          console.error('Error deleting user:', error);
+        });
+    }
+
+    // Fetch user data when the page loads
+    fetchUserData();
+  </script>
+</body>
+</html>
