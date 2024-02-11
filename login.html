@@ -36,6 +36,9 @@
       </div>
       <button type="submit" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600">Sign In</button>
     </form>
+    <div class="max-w-md mx-auto bg-white p-8 rounded shadow-md">
+    <h2 class="text-2xl font-semibold mb-6">User Profile</h2>
+    <div id="profileInfo"></div>
   </div>
 
   <!-- Include Firebase SDK -->
@@ -92,6 +95,21 @@
           const errorMessage = error.message;
           console.error('Login error:', errorCode, errorMessage);
         });
+    });
+     // Check if user is signed in
+    auth.onAuthStateChanged((user) => {
+      if (user) {
+        // User is signed in
+        const profileInfoDiv = document.getElementById('profileInfo');
+        profileInfoDiv.innerHTML = `
+          <p><strong>User ID:</strong> ${user.uid}</p>
+          <p><strong>Email:</strong> ${user.email}</p>
+          <p><strong>Email Verified:</strong> ${user.emailVerified ? 'Yes' : 'No'}</p>
+        `;
+      } else {
+        // User is signed out
+        console.log('User is signed out');
+      }
     });
   </script>
 </body>
