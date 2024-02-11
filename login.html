@@ -40,7 +40,11 @@
     <h2 class="text-2xl font-semibold mb-6">User Profile</h2>
     <div id="profileInfo"></div>
   </div>
-
+<body class="bg-gray-100 p-4">
+  <div class="max-w-md mx-auto bg-white p-8 rounded shadow-md">
+    <h2 class="text-2xl font-semibold mb-6">User Points</h2>
+    <div id="pointsInfo"></div>
+  </div>
   <!-- Include Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
@@ -100,17 +104,27 @@
     auth.onAuthStateChanged((user) => {
       if (user) {
         // User is signed in
-        const profileInfoDiv = document.getElementById('profileInfo');
-        profileInfoDiv.innerHTML = `
-          <p><strong>User ID:</strong> ${user.uid}</p>
-          <p><strong>Email:</strong> ${user.email}</p>
-          <p><strong>Email Verified:</strong> ${user.emailVerified ? 'Yes' : 'No'}</p>
-        `;
+        const userId = user.uid;
+        const pointsRef = database.ref('users/' + userId + '/points');
+
+        // Listen for changes in user's points
+        pointsRef.on('value', (snapshot) => {
+          const userPoints = snapshot.val();
+          displayPoints(userPoints);
+        });
       } else {
         // User is signed out
         console.log('User is signed out');
       }
     });
+
+    // Function to display user's points
+    function displayPoints(points) {
+      const pointsInfoDiv = document.getElementById('pointsInfo');
+      pointsInfoDiv.innerHTML = `
+        <p><strong>Points:</strong> ${points}</p>
+      `;
+    }
   </script>
 </body>
 </html>
