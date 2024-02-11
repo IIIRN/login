@@ -3,16 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Membership System with Tailwind CSS</title>
+  <title>Login and Profile</title>
   <!-- Include Tailwind CSS -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
 <body class="bg-gray-100 p-4">
   <div class="max-w-md mx-auto bg-white p-8 rounded shadow-md">
-    <h2 class="text-2xl font-semibold mb-6">Membership System</h2>
+    <h2 class="text-2xl font-semibold mb-6">Login</h2>
 
-    <!-- Sign Up Form -->
-    <form id="signupForm" class="mb-4">
+    <!-- Login Form -->
+    <form id="loginForm" class="mb-4">
       <div class="mb-4">
         <label for="email" class="block text-gray-700">Email:</label>
         <input type="email" id="email" name="email" class="form-input mt-1 block w-full" placeholder="Enter your email" required>
@@ -21,78 +21,57 @@
         <label for="password" class="block text-gray-700">Password:</label>
         <input type="password" id="password" name="password" class="form-input mt-1 block w-full" placeholder="Enter your password" required>
       </div>
-      <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">Sign Up</button>
+      <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">Login</button>
     </form>
 
-    <!-- Sign In Form -->
-    <form id="signinForm">
-      <div class="mb-4">
-        <label for="signinEmail" class="block text-gray-700">Email:</label>
-        <input type="email" id="signinEmail" name="signinEmail" class="form-input mt-1 block w-full" placeholder="Enter your email" required>
-      </div>
-      <div class="mb-4">
-        <label for="signinPassword" class="block text-gray-700">Password:</label>
-        <input type="password" id="signinPassword" name="signinPassword" class="form-input mt-1 block w-full" placeholder="Enter your password" required>
-      </div>
-      <button type="submit" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600">Sign In</button>
-    </form>
-    <div class="max-w-md mx-auto bg-white p-8 rounded shadow-md">
-    <h2 class="text-2xl font-semibold mb-6">User Profile</h2>
-    <div id="profileInfo"></div>
+    <!-- Profile Data -->
+    <div id="profileData" class="hidden">
+      <h2 class="text-2xl font-semibold mb-4">Profile Data</h2>
+      <p><strong>User ID:</strong> <span id="userId"></span></p>
+      <p><strong>Email:</strong> <span id="userEmail"></span></p>
+      <p><strong>Points:</strong> <span id="userPoints"></span></p>
+      <button id="logoutButton" class="bg-red-500 text-white py-2 px-4 rounded mt-4 hover:bg-red-600">Logout</button>
+    </div>
   </div>
-<body class="bg-gray-100 p-4">
-  <div class="max-w-md mx-auto bg-white p-8 rounded shadow-md">
-    <h2 class="text-2xl font-semibold mb-6">User Points</h2>
-    <div id="pointsInfo"></div>
-  </div>
+  
+
   <!-- Include Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
   <script>
     // Initialize Firebase
     const firebaseConfig = {
-  apiKey: "AIzaSyBEfZKPxqf75KYyi9AWnSwTEoXB_CUIGp0",
-  authDomain: "iiirn-a9b4c.firebaseapp.com",
-  databaseURL: "https://iiirn-a9b4c-default-rtdb.firebaseio.com",
-  projectId: "iiirn-a9b4c",
-  storageBucket: "iiirn-a9b4c.appspot.com",
-  messagingSenderId: "453527572957",
-  appId: "1:453527572957:web:5a28039533fbef81a8e634",
-  measurementId: "G-YLM6GQD6Y0"
+      apiKey: "AIzaSyBEfZKPxqf75KYyi9AWnSwTEoXB_CUIGp0",
+        authDomain: "iiirn-a9b4c.firebaseapp.com",
+        databaseURL: "https://iiirn-a9b4c-default-rtdb.firebaseio.com",
+        projectId: "iiirn-a9b4c",
+        storageBucket: "iiirn-a9b4c.appspot.com",
+        messagingSenderId: "453527572957",
+        appId: "1:453527572957:web:5a28039533fbef81a8e634",
+        measurementId: "G-YLM6GQD6Y0"
     };
     firebase.initializeApp(firebaseConfig);
 
     const auth = firebase.auth();
+    const database = firebase.database();
 
-    // Sign Up Function
-    const signupForm = document.getElementById('signupForm');
-    signupForm.addEventListener('submit', (e) => {
+    // Login Form Submission
+    const loginForm = document.getElementById('loginForm');
+    loginForm.addEventListener('submit', (e) => {
       e.preventDefault();
-      const email = signupForm['email'].value;
-      const password = signupForm['password'].value;
-      auth.createUserWithEmailAndPassword(email, password)
-        .then((userCredential) => {
-          const user = userCredential.user;
-          console.log('User registered:', user);
-        })
-        .catch((error) => {
-          const errorCode = error.code;
-          const errorMessage = error.message;
-          console.error('Registration error:', errorCode, errorMessage);
-        });
-    });
+      const email = loginForm['email'].value;
+      const password = loginForm['password'].value;
 
-    // Sign In Function
-    const signinForm = document.getElementById('signinForm');
-    signinForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const email = signinForm['signinEmail'].value;
-      const password = signinForm['signinPassword'].value;
+      // Sign in user with email and password
       auth.signInWithEmailAndPassword(email, password)
         .then((userCredential) => {
           const user = userCredential.user;
           console.log('User logged in:', user);
+
+          // Display profile data after successful login
+          displayProfileData(user);
         })
         .catch((error) => {
           const errorCode = error.code;
@@ -100,31 +79,60 @@
           console.error('Login error:', errorCode, errorMessage);
         });
     });
-     // Check if user is signed in
-    auth.onAuthStateChanged((user) => {
-      if (user) {
-        // User is signed in
-        const userId = user.uid;
-        const pointsRef = database.ref('users/' + userId + '/points');
 
-        // Listen for changes in user's points
-        pointsRef.on('value', (snapshot) => {
-          const userPoints = snapshot.val();
-          displayPoints(userPoints);
-        });
-      } else {
-        // User is signed out
-        console.log('User is signed out');
-      }
+    // Logout Button
+    const logoutButton = document.getElementById('logoutButton');
+    logoutButton.addEventListener('click', () => {
+      auth.signOut().then(() => {
+        // Sign-out successful.
+        console.log('User signed out');
+        // Remove user data from local storage
+        localStorage.removeItem('user');
+        // Hide profile data and show login form
+        document.getElementById('profileData').classList.add('hidden');
+        document.getElementById('loginForm').classList.remove('hidden');
+      }).catch((error) => {
+        // An error happened.
+        console.error('Logout error:', error);
+      });
     });
 
-    // Function to display user's points
-    function displayPoints(points) {
-      const pointsInfoDiv = document.getElementById('pointsInfo');
-      pointsInfoDiv.innerHTML = `
-        <p><strong>Points:</strong> ${points}</p>
-      `;
+    // Function to display profile data after login
+    function displayProfileData(user) {
+      const profileDataDiv = document.getElementById('profileData');
+      const userIdSpan = document.getElementById('userId');
+      const userEmailSpan = document.getElementById('userEmail');
+      const userPointsSpan = document.getElementById('userPoints');
+
+      // Get user data from Firebase Realtime Database
+      database.ref('users/' + user.uid).once('value')
+        .then((snapshot) => {
+          const userData = snapshot.val();
+          userIdSpan.textContent = user.uid;
+          userEmailSpan.textContent = user.email;
+          userPointsSpan.textContent = userData.points;
+          profileDataDiv.classList.remove('hidden');
+          // Hide login form
+          loginForm.classList.add('hidden');
+          // Save user data to local storage
+          localStorage.setItem('user', JSON.stringify(user));
+        })
+        .catch((error) => {
+          console.error('Error getting user data:', error);
+        });
     }
+
+    // Check user authentication state on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      const user = JSON.parse(localStorage.getItem('user'));
+      if (user) {
+        // User is logged in, display profile data
+        displayProfileData(user);
+      } else {
+        // User is not logged in, display login form
+        document.getElementById('loginForm').classList.remove('hidden');
+      }
+    });
   </script>
 </body>
 </html>
