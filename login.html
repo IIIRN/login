@@ -1,37 +1,98 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Page</title>
-    <script src="https://apis.google.com/js/api.js"></script>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Membership System with Tailwind CSS</title>
+  <!-- Include Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body>
-    <h2>Login</h2>
-    <form id="loginForm">
-        <label for="username">Username:</label><br>
-        <input type="text" id="username" name="username"><br>
-        <label for="password">Password:</label><br>
-        <input type="password" id="password" name="password"><br><br>
-        <input type="submit" value="Login">
+<body class="bg-gray-100 p-4">
+  <div class="max-w-md mx-auto bg-white p-8 rounded shadow-md">
+    <h2 class="text-2xl font-semibold mb-6">Membership System</h2>
+
+    <!-- Sign Up Form -->
+    <form id="signupForm" class="mb-4">
+      <div class="mb-4">
+        <label for="email" class="block text-gray-700">Email:</label>
+        <input type="email" id="email" name="email" class="form-input mt-1 block w-full" placeholder="Enter your email" required>
+      </div>
+      <div class="mb-4">
+        <label for="password" class="block text-gray-700">Password:</label>
+        <input type="password" id="password" name="password" class="form-input mt-1 block w-full" placeholder="Enter your password" required>
+      </div>
+      <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">Sign Up</button>
     </form>
-    <script>
-        document.getElementById("loginForm").addEventListener("submit", function(event) {
-            event.preventDefault(); // Prevent the form from submitting
-            
-            var username = document.getElementById("username").value;
-            var password = document.getElementById("password").value;
-            
-            google.script.run.withSuccessHandler(function(isLoggedIn) {
-                if (isLoggedIn) {
-                    alert("Login successful!");
-                    // Redirect or perform other actions upon successful login
-                } else {
-                    alert("Invalid username or password!");
-                }
-            }).checkLogin(username, password);
+
+    <!-- Sign In Form -->
+    <form id="signinForm">
+      <div class="mb-4">
+        <label for="signinEmail" class="block text-gray-700">Email:</label>
+        <input type="email" id="signinEmail" name="signinEmail" class="form-input mt-1 block w-full" placeholder="Enter your email" required>
+      </div>
+      <div class="mb-4">
+        <label for="signinPassword" class="block text-gray-700">Password:</label>
+        <input type="password" id="signinPassword" name="signinPassword" class="form-input mt-1 block w-full" placeholder="Enter your password" required>
+      </div>
+      <button type="submit" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600">Sign In</button>
+    </form>
+  </div>
+
+  <!-- Include Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
+
+  <script>
+    // Initialize Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyBEfZKPxqf75KYyi9AWnSwTEoXB_CUIGp0",
+  authDomain: "iiirn-a9b4c.firebaseapp.com",
+  databaseURL: "https://iiirn-a9b4c-default-rtdb.firebaseio.com",
+  projectId: "iiirn-a9b4c",
+  storageBucket: "iiirn-a9b4c.appspot.com",
+  messagingSenderId: "453527572957",
+  appId: "1:453527572957:web:5a28039533fbef81a8e634",
+  measurementId: "G-YLM6GQD6Y0"
+    };
+    firebase.initializeApp(firebaseConfig);
+
+    const auth = firebase.auth();
+
+    // Sign Up Function
+    const signupForm = document.getElementById('signupForm');
+    signupForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const email = signupForm['email'].value;
+      const password = signupForm['password'].value;
+      auth.createUserWithEmailAndPassword(email, password)
+        .then((userCredential) => {
+          const user = userCredential.user;
+          console.log('User registered:', user);
+        })
+        .catch((error) => {
+          const errorCode = error.code;
+          const errorMessage = error.message;
+          console.error('Registration error:', errorCode, errorMessage);
         });
-    </script>
+    });
+
+    // Sign In Function
+    const signinForm = document.getElementById('signinForm');
+    signinForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const email = signinForm['signinEmail'].value;
+      const password = signinForm['signinPassword'].value;
+      auth.signInWithEmailAndPassword(email, password)
+        .then((userCredential) => {
+          const user = userCredential.user;
+          console.log('User logged in:', user);
+        })
+        .catch((error) => {
+          const errorCode = error.code;
+          const errorMessage = error.message;
+          console.error('Login error:', errorCode, errorMessage);
+        });
+    });
+  </script>
 </body>
 </html>
