@@ -34,6 +34,7 @@
       </div>
     </form>
     <div id="postList"></div>
+
   </div>
 
   <!-- Include Firebase SDK -->
@@ -122,6 +123,22 @@ function savePost(title, cover, content, point) {
   // รีเฟรชฟอร์ม
   postForm.reset();
 }
+  // ฟังก์ชันแสดงโพสต์ทั้งหมด
+function displayAllPosts() {
+  // อ่านข้อมูลโพสต์ทั้งหมดจาก Firebase
+  const postsRef = database.ref('posts');
+  postsRef.once('value', (snapshot) => {
+    // วนซ้ำโพสต์แต่ละโพสต์
+    snapshot.forEach((childSnapshot) => {
+      const post = childSnapshot.val();
+      displayPost(post);
+    });
+  });
+}
+
+// เรียกใช้ฟังก์ชันแสดงโพสต์ทั้งหมดเมื่อโหลดหน้าเว็บ
+displayAllPosts();
+  
   </script>
 </body>
 </html>
