@@ -138,7 +138,37 @@ function displayAllPosts() {
 
 // เรียกใช้ฟังก์ชันแสดงโพสต์ทั้งหมดเมื่อโหลดหน้าเว็บ
 displayAllPosts();
-  
+  // เพิ่มปุ่มลบและแก้ไขใน element โพสต์
+function displayPost(post) {
+  // ... (โค้ดเดิมสำหรับแสดงโพสต์) ...
+
+  const buttonContainer = document.createElement('div');
+  buttonContainer.classList.add('flex', 'justify-end');
+
+  // ปุ่มลบ
+  const deleteButton = document.createElement('button');
+  deleteButton.classList.add('bg-red-500', 'text-white', 'px-4', 'py-2', 'rounded', 'ml-2');
+  deleteButton.textContent = 'Delete';
+  deleteButton.onclick = () => {
+    // ลบโพสต์ออกจาก Firebase
+    const postRef = database.ref(`posts/${post.id}`);
+    postRef.remove();
+  };
+  buttonContainer.appendChild(deleteButton);
+
+  // ปุ่มแก้ไข
+  const editButton = document.createElement('button');
+  editButton.classList.add('bg-blue-500', 'text-white', 'px-4', 'py-2', 'rounded');
+  editButton.textContent = 'Edit';
+  editButton.onclick = () => {
+    // แสดง modal แก้ไขโพสต์
+    // ... (โค้ดสำหรับแสดง modal แก้ไข) ...
+  };
+  buttonContainer.appendChild(editButton);
+
+  postElement.appendChild(buttonContainer);
+}
+
   </script>
 </body>
 </html>
