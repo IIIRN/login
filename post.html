@@ -141,6 +141,85 @@ function displayAllPosts() {
 // เรียกใช้ฟังก์ชันแสดงโพสต์ทั้งหมดเมื่อโหลดหน้าเว็บ
 displayAllPosts();
 
+// Edit Post Function
+function editPost(postId, newData) {
+    const postRef = database.ref('posts/' + postId);
+    postRef.update(newData)
+        .then(() => {
+            console.log('Post updated successfully:', postId);
+        })
+        .catch((error) => {
+            console.error('Error updating post:', error);
+        });
+}
+
+// Delete Post Function
+function deletePost(postId) {
+    const postRef = database.ref('posts/' + postId);
+    postRef.remove()
+        .then(() => {
+            console.log('Post deleted successfully:', postId);
+            // Remove the post from the UI
+            const postElement = document.getElementById(postId);
+            if (postElement) {
+                postElement.remove();
+            }
+        })
+        .catch((error) => {
+            console.error('Error deleting post:', error);
+        });
+}
+
+// Function to add event listeners to edit and delete buttons
+function addEditDeleteListeners() {
+    postList.querySelectorAll('.edit-btn').forEach((button) => {
+        button.addEventListener('click', (event) => {
+            const postId = event.target.dataset.postId;
+            // Populate form fields with post data for editing
+            // Retrieve post data from the database based on postId
+            // Populate the form fields with the retrieved data
+            // Add functionality to update the post when the form is submitted
+        });
+    });
+
+    postList.querySelectorAll('.delete-btn').forEach((button) => {
+        button.addEventListener('click', (event) => {
+            const postId = event.target.dataset.postId;
+            // Prompt the user for confirmation before deleting the post
+            const confirmation = confirm('Are you sure you want to delete this post?');
+            if (confirmation) {
+                deletePost(postId);
+            }
+        });
+    });
+}
+
+// Modify the displayPost function to include edit and delete buttons
+function displayPost(post) {
+    // Create the post element
+    const postElement = document.createElement('div');
+    postElement.id = post.id; // Set an ID for the post element
+    // Add other post content
+
+    // Create the edit button
+    const editButton = document.createElement('button');
+    editButton.textContent = 'Edit';
+    editButton.classList.add('edit-btn');
+    editButton.dataset.postId = post.id;
+    postElement.appendChild(editButton);
+
+    // Create the delete button
+    const deleteButton = document.createElement('button');
+    deleteButton.textContent = 'Delete';
+    deleteButton.classList.add('delete-btn');
+    deleteButton.dataset.postId = post.id;
+    postElement.appendChild(deleteButton);
+
+    postList.appendChild(postElement);
+}
+
+// Call addEditDeleteListeners to add event listeners when posts are displayed
+addEditDeleteListeners();
 
   </script>
 </body>
