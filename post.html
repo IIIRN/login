@@ -33,6 +33,7 @@
         <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded mt-2 hover:bg-blue-600">Submit</button>
       </div>
     </form>
+    <div id="postList"></div>
   </div>
 
   <!-- Include Firebase SDK -->
@@ -85,6 +86,42 @@
         console.error('Error creating post:', error);
       });
     }
+    // เพิ่มตัวแปรเพื่อเก็บ DOM element ของโพสต์
+const postList = document.getElementById('postList');
+
+// เพิ่มฟังก์ชันแสดงโพสต์
+function displayPost(post) {
+  // สร้าง element โพสต์ใหม่
+  const postElement = document.createElement('div');
+  postElement.classList.add('bg-white', 'p-4', 'rounded', 'shadow-md');
+
+  // เพิ่มเนื้อหาโพสต์
+  const titleElement = document.createElement('h2');
+  titleElement.classList.add('text-xl', 'font-semibold');
+  titleElement.textContent = post.title;
+  postElement.appendChild(titleElement);
+
+  const contentElement = document.createElement('p');
+  contentElement.textContent = post.content;
+  postElement.appendChild(contentElement);
+
+  // เพิ่ม element โพสต์ใหม่ลงในรายการโพสต์
+  postList.appendChild(postElement);
+}
+
+// ฟังก์ชันบันทึกโพสต์
+function savePost(title, cover, content, point) {
+  // ... (โค้ดเดิมสำหรับบันทึกโพสต์) ...
+
+  // บันทึกโพสต์สำเร็จแล้ว แสดงโพสต์ใหม่
+  displayPost({
+    title,
+    content,
+  });
+
+  // รีเฟรชฟอร์ม
+  postForm.reset();
+}
   </script>
 </body>
 </html>
