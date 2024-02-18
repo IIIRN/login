@@ -12,215 +12,266 @@
     <h2 class="text-2xl font-semibold mb-6">Write a Post</h2>
 
     <!-- Post Form -->
-    <form id="postForm" class="space-y-4">
-      <div>
-        <label for="title" class="block text-gray-700">Title:</label>
-        <input type="text" id="title" name="title" class="form-input mt-1 block w-full" required>
-      </div>
-      <div>
-        <label for="cover" class="block text-gray-700">Cover Image URL:</label>
-        <input type="url" id="cover" name="cover" class="form-input mt-1 block w-full">
-      </div>
-      <div>
-        <label for="content" class="block text-gray-700">Content:</label>
-        <textarea id="content" name="content" rows="5" class="form-textarea mt-1 block w-full" required></textarea>
-      </div>
-      <div>
-        <label for="point" class="block text-gray-700">Point Cost:</label>
-        <input type="number" id="point" name="point" class="form-input mt-1 block w-full" required>
-      </div>
-      <div>
-        <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded mt-2 hover:bg-blue-600">Submit</button>
-      </div>
-    </form>
-    
+    <form id="postForm" class="space-y-4" data-post-id="" data-cover-url="">
+        <div>
+          <label for="title" class="block text-gray-700">Title:</label>
+          <input type="text" id="title" name="title" class="form-input mt-1 block w-full bg-gray-100" required>
+        </div>
+        <div>
+          <label for="content" class="block text-gray-700">Content:</label>
+          <textarea id="content" name="content" rows="5" class="form-textarea mt-1 block w-full bg-gray-100" required></textarea>
+        </div>
+        <div>
+          <label for="point" class="block text-gray-700">Point Cost:</label>
+          <input type="number" id="point" name="point" class="form-input mt-1 block w-full bg-gray-100" required>
+        </div>
+        <div>
+          <label for="cover" class="block text-gray-700">Cover Image:</label>
+          <input type="file" id="cover" name="cover" accept="image/*" class="form-input mt-1 block w-full ">
+        </div>
+        <div>
+          <label for="catalog" class="block text-gray-700">Catalog:</label>
+          <input type="text" id="catalog" name="catalog" class="form-input mt-1 block w-full bg-gray-100" required>
+        </div>
+        <div>
+          <label for="tags" class="block text-gray-700">Tags (comma-separated):</label>
+          <input type="text" id="tags" name="tags" class="form-input mt-1 block w-full bg-gray-100" required>
+        </div>
+        <div>
+          <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded mt-2 hover:bg-blue-600">Submit</button>
+        </div>
+      </form>
+  </div>
 
+  <!-- Post List -->
+  <div class="max-w-3xl mx-auto mt-8">
+    <h2 class="text-2xl font-semibold mb-4">Posts</h2>
+    <div id="postList" class="grid grid-cols-3 gap-4"></div>
   </div>
-  <div class="max-w-3xl mx-auto bg-white p-8 rounded shadow-md">
-    <div id="postList"></div>
-  </div>
+  
+
   <!-- Include Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
 
   <script>
-    // Initialize Firebase
+    // Firebase Configuration
     const firebaseConfig = {
-        apiKey: "AIzaSyBEfZKPxqf75KYyi9AWnSwTEoXB_CUIGp0",
-        authDomain: "iiirn-a9b4c.firebaseapp.com",
-        databaseURL: "https://iiirn-a9b4c-default-rtdb.firebaseio.com",
-        projectId: "iiirn-a9b4c",
-        storageBucket: "iiirn-a9b4c.appspot.com",
-        messagingSenderId: "453527572957",
-        appId: "1:453527572957:web:5a28039533fbef81a8e634",
-        measurementId: "G-YLM6GQD6Y0"
-    };
+            apiKey: "AIzaSyBEfZKPxqf75KYyi9AWnSwTEoXB_CUIGp0",
+            authDomain: "iiirn-a9b4c.firebaseapp.com",
+            databaseURL: "https://iiirn-a9b4c-default-rtdb.firebaseio.com",
+            projectId: "iiirn-a9b4c",
+            storageBucket: "iiirn-a9b4c.appspot.com",
+            messagingSenderId: "453527572957",
+            appId: "1:453527572957:web:5a28039533fbef81a8e634",
+            measurementId: "G-YLM6GQD6Y0"    };
     firebase.initializeApp(firebaseConfig);
 
     const database = firebase.database();
+    const storage = firebase.storage();
 
     // Handle form submission
     const postForm = document.getElementById('postForm');
     postForm.addEventListener('submit', (e) => {
       e.preventDefault();
 
-      // Get form values
       const title = postForm.title.value;
-      const cover = postForm.cover.value;
       const content = postForm.content.value;
       const point = parseInt(postForm.point.value);
+      const cover = document.getElementById('cover').files[0];
+      const catalog = postForm.catalog.value;
+      const tags = postForm.tags.value;
 
-      // Save post data to Firebase Realtime Database
-      savePost(title, cover, content, point);
+      if (cover) {
+        // If a new cover image is selected, upload it and update the post data
+        uploadCoverAndSavePost(title, content, point, cover, catalog, tags);
+      } else {
+        // If no new cover image is selected, only update the post data
+        const postId = postForm.getAttribute('data-post-id');
+        const existingCoverURL = postForm.getAttribute('data-cover-url');
+        updatePostData(postId, {
+          title: title,
+          content: content,
+          point: point,
+          cover: existingCoverURL,
+          catalog: catalog,
+          tags: tags.split(',').map(tag => tag.trim())
+        });
+      }
     });
 
-    // Function to save post data to Firebase Realtime Database
-    function savePost(title, cover, content, point) {
+    // Upload cover image and save post data
+    function uploadCoverAndSavePost(title, content, point, cover, catalog, tags) {
+      const storageRef = storage.ref('covers/' + cover.name);
+
+      storageRef.put(cover)
+        .then((snapshot) => {
+          return snapshot.ref.getDownloadURL();
+        })
+        .then((downloadURL) => {
+          // Get post ID from the form attribute
+          const postId = postForm.getAttribute('data-post-id');
+          updatePostData(postId, {
+            title: title,
+            content: content,
+            point: point,
+            cover: downloadURL,
+            catalog: catalog,
+            tags: tags.split(',').map(tag => tag.trim())
+          });
+        })
+        .then(() => {
+          // Reload the page to refresh the data
+          window.location.reload();
+        })
+        .catch((error) => {
+          console.error('Error uploading cover:', error);
+        });
+    }
+
+    // Update post data in Firebase Realtime Database
+    function updatePostData(postId, postData) {
+      const postRef = database.ref('posts/' + postId);
+      postRef.update(postData)
+        .then(() => {
+          console.log('Post updated successfully');
+          // Reset form after submission
+          postForm.reset();
+        })
+        .catch((error) => {
+          console.error('Error updating post:', error);
+        });
+    }
+
+    // Display all posts
+    const postList = document.getElementById('postList');
+
+    function displayAllPosts() {
       const postsRef = database.ref('posts');
-      postsRef.push({
-        title: title,
-        cover: cover,
-        content: content,
-        point: point
-      }).then(() => {
-        console.log('Post created successfully:', title);
-        // Redirect or display success message as needed
-      }).catch((error) => {
-        console.error('Error creating post:', error);
+      postsRef.once('value', (snapshot) => {
+        snapshot.forEach((childSnapshot) => {
+          const post = childSnapshot.val();
+          displayPost(childSnapshot.key, post);
+        });
       });
     }
-    // เพิ่มตัวแปรเพื่อเก็บ DOM element ของโพสต์
-const postList = document.getElementById('postList');
 
-// เพิ่มฟังก์ชันแสดงโพสต์
-function displayPost(post) {
-  // สร้าง element โพสต์ใหม่
-  const postElement = document.createElement('div');
-  postElement.classList.add('bg-white', 'p-4', 'rounded', 'shadow-md');
+    // Display post in a card
+    function displayPost(postId, post) {
+      const postCard = document.createElement('div');
+      postCard.id = postId;
+      postCard.classList.add('bg-white', 'p-4', 'rounded', 'shadow-md');
 
-  // เพิ่มเนื้อหาโพสต์
-  const titleElement = document.createElement('h2');
-  titleElement.classList.add('text-xl', 'font-semibold');
-  titleElement.textContent = post.title;
-  postElement.appendChild(titleElement);
+      const titleElement = document.createElement('h3');
+      titleElement.textContent = post.title;
+      titleElement.classList.add('text-xl', 'font-semibold', 'mb-2');
 
-  const contentElement = document.createElement('p');
-  contentElement.textContent = post.content;
-  postElement.appendChild(contentElement);
+      const coverElement = document.createElement('img');
+      coverElement.src = post.cover;
+      coverElement.classList.add('mb-2', 'rounded');
 
-  // เพิ่ม element โพสต์ใหม่ลงในรายการโพสต์
-  postList.appendChild(postElement);
-}
+      const contentElement = document.createElement('p');
+      contentElement.textContent = post.content;
 
-// ฟังก์ชันบันทึกโพสต์
-function savePost(title, cover, content, point) {
-  // ... (โค้ดเดิมสำหรับบันทึกโพสต์) ...
+      const pointElement = document.createElement('p');
+      pointElement.textContent = `Point Cost: ${post.point}`;
 
-  // บันทึกโพสต์สำเร็จแล้ว แสดงโพสต์ใหม่
-  displayPost({
-    title,
-    content,
-  });
+      const catalogElement = document.createElement('p');
+      catalogElement.textContent = `Catalog: ${post.catalog}`;
 
-  // รีเฟรชฟอร์ม
-  postForm.reset();
-}
-  // ฟังก์ชันแสดงโพสต์ทั้งหมด
-function displayAllPosts() {
-  // อ่านข้อมูลโพสต์ทั้งหมดจาก Firebase
-  const postsRef = database.ref('posts');
-  postsRef.once('value', (snapshot) => {
-    // วนซ้ำโพสต์แต่ละโพสต์
-    snapshot.forEach((childSnapshot) => {
-      const post = childSnapshot.val();
-      displayPost(post);
-    });
-  });
-}
+      const tagsElement = document.createElement('p');
+      tagsElement.textContent = `Tags: ${post.tags.join(', ')}`;
 
-// เรียกใช้ฟังก์ชันแสดงโพสต์ทั้งหมดเมื่อโหลดหน้าเว็บ
-displayAllPosts();
+      const editButton = document.createElement('button');
+      editButton.textContent = 'Edit';
+      editButton.classList.add('bg-yellow-500', 'text-white', 'py-2', 'px-4', 'rounded', 'mt-2', 'mr-2', 'hover:bg-yellow-600');
+      editButton.addEventListener('click', () => {
+        showEditForm(postId, post);
+      });
 
-// Edit Post Function
-function editPost(postId, newData) {
-    const postRef = database.ref('posts/' + postId);
-    postRef.update(newData)
-        .then(() => {
-            console.log('Post updated successfully:', postId);
-        })
-        .catch((error) => {
-            console.error('Error updating post:', error);
+      postCard.appendChild(titleElement);
+      postCard.appendChild(coverElement);
+      postCard.appendChild(contentElement);
+      postCard.appendChild(pointElement);
+      postCard.appendChild(catalogElement);
+      postCard.appendChild(tagsElement);
+      postCard.appendChild(editButton);
+
+      postList.appendChild(postCard);
+    }
+
+    // Function to display edit form
+    function showEditForm(postId, post) {
+      const editForm = `
+        <h2>Edit Post</h2>
+        <form id="editForm">
+          <div>
+            <label for="editTitle">Title:</label>
+            <input type="text" id="editTitle" name="editTitle" value="${post.title}" required>
+          </div>
+          <div>
+            <label for="editContent">Content:</label>
+            <textarea id="editContent" name="editContent" rows="5" required>${post.content}</textarea>
+          </div>
+          <div>
+            <label for="editPoint">Point Cost:</label>
+            <input type="number" id="editPoint" name="editPoint" value="${post.point}" required>
+          </div>
+          <div>
+            <label for="editCover">Choose New Cover Image:</label>
+            <input type="file" id="editCover" name="editCover" accept="image/*">
+          </div>
+          <button class="bg-green-500 text-white py-2 px-4 rounded mt-2 mr-2 hover:bg-green-600" type="submit">Update</button>
+        </form>
+      `;
+
+      const postCard = document.getElementById(postId);
+      postCard.innerHTML = editForm;
+
+      const editFormElement = document.getElementById('editForm');
+      editFormElement.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const updatedTitle = editFormElement.editTitle.value;
+        const updatedContent = editFormElement.editContent.value;
+        const updatedPoint = parseInt(editFormElement.editPoint.value);
+        const updatedCover = document.getElementById('editCover').files[0];
+
+        updatePost(postId, {
+          title: updatedTitle,
+          content: updatedContent,
+          point: updatedPoint,
+          cover: updatedCover
         });
-}
+      });
+    }
 
-// Delete Post Function
-function deletePost(postId) {
-    const postRef = database.ref('posts/' + postId);
-    postRef.remove()
-        .then(() => {
-            console.log('Post deleted successfully:', postId);
-            // Remove the post from the UI
-            const postElement = document.getElementById(postId);
-            if (postElement) {
-                postElement.remove();
-            }
-        })
-        .catch((error) => {
-            console.error('Error deleting post:', error);
-        });
-}
+    // Function to update post in the database
+    function updatePost(postId, postData) {
+      if (postData.cover) {
+        // If a new cover image is selected, upload it and then update the post data
+        const storageRef = storage.ref('covers/' + postData.cover.name);
 
-// Function to add event listeners to edit and delete buttons
-function addEditDeleteListeners() {
-    postList.querySelectorAll('.edit-btn').forEach((button) => {
-        button.addEventListener('click', (event) => {
-            const postId = event.target.dataset.postId;
-            // Populate form fields with post data for editing
-            // Retrieve post data from the database based on postId
-            // Populate the form fields with the retrieved data
-            // Add functionality to update the post when the form is submitted
-        });
-    });
+        storageRef.put(postData.cover)
+          .then((snapshot) => {
+            return snapshot.ref.getDownloadURL();
+          })
+          .then((downloadURL) => {
+            // Update post data with the new cover URL
+            postData.cover = downloadURL;
+            updatePostData(postId, postData);
+          })
+          .catch((error) => {
+            console.error('Error uploading new cover:', error);
+          });
+      } else {
+        // If no new cover image is selected, directly update the post data
+        updatePostData(postId, postData);
+      }
+    }
 
-    postList.querySelectorAll('.delete-btn').forEach((button) => {
-        button.addEventListener('click', (event) => {
-            const postId = event.target.dataset.postId;
-            // Prompt the user for confirmation before deleting the post
-            const confirmation = confirm('Are you sure you want to delete this post?');
-            if (confirmation) {
-                deletePost(postId);
-            }
-        });
-    });
-}
-
-// Modify the displayPost function to include edit and delete buttons
-function displayPost(post) {
-    // Create the post element
-    const postElement = document.createElement('div');
-    postElement.id = post.id; // Set an ID for the post element
-    // Add other post content
-
-    // Create the edit button
-    const editButton = document.createElement('button');
-    editButton.textContent = 'Edit';
-    editButton.classList.add('edit-btn');
-    editButton.dataset.postId = post.id;
-    postElement.appendChild(editButton);
-
-    // Create the delete button
-    const deleteButton = document.createElement('button');
-    deleteButton.textContent = 'Delete';
-    deleteButton.classList.add('delete-btn');
-    deleteButton.dataset.postId = post.id;
-    postElement.appendChild(deleteButton);
-
-    postList.appendChild(postElement);
-}
-
-// Call addEditDeleteListeners to add event listeners when posts are displayed
-addEditDeleteListeners();
-
+    displayAllPosts();
   </script>
 </body>
 </html>
