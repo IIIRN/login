@@ -1,0 +1,118 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+    <title>IIIRN STUDIO</title>
+</head>
+
+<body class="mx-auto max-w-screen-lg">
+    <nav class="bg-gray-10 mt-8 p-4">
+        <div class="container mx-auto max-w-screen-lg flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <div class="flex -space-x-2 overflow-hidden">
+                    <img class="inline-block h-10 w-10 rounded-full ring-2 ring-white"
+                        src="https://images.unsplash.com/photo-1491528323818-fdd1faba62cc?ixlib=rb-1.2.1&amp;ixid=eyJhcHBfaWQiOjEyMDd9&amp;auto=format&amp;fit=facearea&amp;facepad=2&amp;w=256&amp;h=256&amp;q=80"
+                        alt="" />
+                    <img class="inline-block h-10 w-10 rounded-full ring-2 ring-white"
+                        src="https://images.unsplash.com/photo-1550525811-e5869dd03032?ixlib=rb-1.2.1&amp;auto=format&amp;fit=facearea&amp;facepad=2&amp;w=256&amp;h=256&amp;q=80"
+                        alt="" />
+                    <img class="inline-block h-10 w-10 rounded-full ring-2 ring-white"
+                        src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&amp;ixid=eyJhcHBfaWQiOjEyMDd9&amp;auto=format&amp;fit=facearea&amp;facepad=2.25&amp;w=256&amp;h=256&amp;q=80"
+                        alt="" />
+                    <img class="inline-block h-10 w-10 rounded-full ring-2 ring-white"
+                        src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&amp;ixid=eyJhcHBfaWQiOjEyMDd9&amp;auto=format&amp;fit=facearea&amp;facepad=2&amp;w=256&amp;h=256&amp;q=80"
+                        alt="" />
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div>
+                    <h1 class="text-right text-md font-semibold">TEERANAN K.</h1>
+                    <p class="text-sm text-gray-00">listening 🎶 music ~~<a style="color: #13d257">เหนื่อยจังอยากฟังเสียง-ไหมไทย หัวใจศิลป์</a></p>
+                </div>
+                <div class="flex-shrink-0">
+                    <img src="iiirn.png" alt="Profile" class="h-10 w-10 rounded-full" />
+                </div>
+            </div>
+        </div>
+    </nav>
+    <div class="max-w-md mx-auto bg-white my-8 p-8 rounded shadow-md">
+        <h2 class="text-2xl font-semibold mb-6">User Settings</h2>
+    
+        <!-- Update User Form -->
+        <form id="updateForm" class="mb-4">
+          <div class="mb-4">
+            <label for="displayName" class="block text-gray-700">Display Name:</label>
+            <input type="text" id="displayName" name="displayName" class="form-input mt-1 block w-full" placeholder="Enter your display name" required>
+          </div>
+          <div class="mb-4">
+            <label for="newPassword" class="block text-gray-700">New Password:</label>
+            <input type="password" id="newPassword" name="newPassword" class="form-input mt-1 block w-full" placeholder="Enter your new password">
+          </div>
+          <div class="mb-4">
+            <label for="confirmPassword" class="block text-gray-700">Confirm New Password:</label>
+            <input type="password" id="confirmPassword" name="confirmPassword" class="form-input mt-1 block w-full" placeholder="Confirm your new password">
+          </div>
+          <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">Update</button>
+        </form>
+    
+        <!-- Feedback Section -->
+        <div id="feedback" class="hidden">
+          <p class="text-green-500">User information updated successfully!</p>
+        </div>
+      </div>
+
+<footer class="bg-gray-200 text-gray-900 mx-auto text-sm text-center rounded-xl py-5">IIIRNSTUDIO @ 2024</footer>
+ <!-- Include Firebase SDK -->
+ <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+ <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+ <script>
+   // Initialize Firebase
+   const firebaseConfig = {
+        apiKey: "AIzaSyBEfZKPxqf75KYyi9AWnSwTEoXB_CUIGp0",
+        authDomain: "iiirn-a9b4c.firebaseapp.com",
+        databaseURL: "https://iiirn-a9b4c-default-rtdb.firebaseio.com",
+        projectId: "iiirn-a9b4c",
+        storageBucket: "iiirn-a9b4c.appspot.com",
+        messagingSenderId: "453527572957",
+        appId: "1:453527572957:web:5a28039533fbef81a8e634",
+        measurementId: "G-YLM6GQD6Y0"
+   };
+   firebase.initializeApp(firebaseConfig);
+
+   const auth = firebase.auth();
+
+   // Update Form Submission
+   const updateForm = document.getElementById('updateForm');
+   const feedbackDiv = document.getElementById('feedback');
+
+   updateForm.addEventListener('submit', (e) => {
+     e.preventDefault();
+     const displayName = updateForm['displayName'].value;
+     const newPassword = updateForm['newPassword'].value;
+     const confirmPassword = updateForm['confirmPassword'].value;
+
+     // Check if newPassword and confirmPassword match
+     if (newPassword !== confirmPassword) {
+       alert("Passwords do not match!");
+       return;
+     }
+
+     // Update user's display name and password
+     const user = auth.currentUser;
+     user.updateProfile({
+       displayName: displayName,
+       password: newPassword
+     }).then(() => {
+       // Update successful
+       console.log('User profile updated successfully');
+       feedbackDiv.classList.remove('hidden');
+     }).catch((error) => {
+       // An error occurred
+       console.error('Error updating profile:', error);
+     });
+   });
+ </script>
+</body>
+</html>
