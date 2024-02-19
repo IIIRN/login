@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up</title>
+  <!-- Include Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 p-4">
+  <div class="max-w-md mx-auto bg-white p-8 rounded shadow-md">
+    <h2 class="text-2xl font-semibold mb-6">Sign Up</h2>
+
+    <!-- Sign Up Form -->
+    <form id="signupForm" class="mb-4">
+      <div class="mb-4">
+        <label for="name" class="block text-gray-700">Name:</label>
+        <input type="text" id="name" name="name" class="form-input mt-1 block w-full" placeholder="Enter your name" required>
+      </div>
+      <div class="mb-4">
+        <label for="email" class="block text-gray-700">Email:</label>
+        <input type="email" id="email" name="email" class="form-input mt-1 block w-full" placeholder="Enter your email" required>
+      </div>
+      <div class="mb-4">
+        <label for="password" class="block text-gray-700">Password:</label>
+        <input type="password" id="password" name="password" class="form-input mt-1 block w-full" placeholder="Enter your password" required>
+      </div>
+      <div class="mb-4">
+        <label for="profilePhoto" class="block text-gray-700">Profile Photo:</label>
+        <input type="file" id="profilePhoto" name="profilePhoto" accept="image/*" class="form-input mt-1 block w-full">
+      </div>
+      <div class="mb-4">
+        <label for="caption" class="block text-gray-700">Caption:</label>
+        <textarea id="caption" name="caption" class="form-textarea mt-1 block w-full" placeholder="Enter your caption"></textarea>
+      </div>
+      <div class="mb-4">
+        <label for="tag" class="block text-gray-700">Tag:</label>
+        <input type="text" id="tag" name="tag" class="form-input mt-1 block w-full" placeholder="Enter your tag">
+      </div>
+      <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">Sign Up</button>
+    </form>
+
+    <!-- Feedback Section -->
+    <div id="feedback" class="hidden">
+      <p class="text-green-500">Sign up successful! Welcome aboard!</p>
+    </div>
+  </div>
+
+  <!-- Include Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+
+  <script>
+    // Initialize Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyBEfZKPxqf75KYyi9AWnSwTEoXB_CUIGp0",
+        authDomain: "iiirn-a9b4c.firebaseapp.com",
+        databaseURL: "https://iiirn-a9b4c-default-rtdb.firebaseio.com",
+        projectId: "iiirn-a9b4c",
+        storageBucket: "iiirn-a9b4c.appspot.com",
+        messagingSenderId: "453527572957",
+        appId: "1:453527572957:web:5a28039533fbef81a8e634",
+        measurementId: "G-YLM6GQD6Y0"
+    };
+    firebase.initializeApp(firebaseConfig);
+
+    const database = firebase.database();
+
+    // Sign Up Form Submission
+const signupForm = document.getElementById('signupForm');
+const feedbackDiv = document.getElementById('feedback');
+
+signupForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const name = signupForm['name'].value;
+  const email = signupForm['email'].value;
+  const password = signupForm['password'].value;
+  const profilePhoto = signupForm['profilePhoto'].files[0];
+  const caption = signupForm['caption'].value;
+  const tag = signupForm['tag'].value;
+  const points = 1; // Default points value
+
+  // Create user with email and password in Firebase Authentication
+  firebase.auth().createUserWithEmailAndPassword(email, password)
+    .then((userCredential) => {
+      // Signed up successfully, get user ID
+      const user = userCredential.user;
+      console.log('User signed up successfully:', user.uid);
+
+      // Create a Firebase Storage reference for profile photo
+      const storageRef = firebase.storage().ref('profile_photos/' + user.uid + '_' + profilePhoto.name);
+      const uploadTask = storageRef.put(profilePhoto); // Upload profile photo to Firebase Storage
+
+      // Save user data to Firebase Realtime Database after profile photo upload completes
+      return uploadTask.then((snapshot) => {
+        console.log('Profile photo uploaded successfully');
+        // Get the download URL of the uploaded profile photo
+        return snapshot.ref.getDownloadURL();
+      }).then((downloadURL) => {
+        // Save user data including profile photo URL and points to Firebase Realtime Database
+        return firebase.database().ref('users/' + user.uid).set({
+          name: name,
+          email: email,
+          profilePhoto: downloadURL, // Save profile photo URL
+          caption: caption,
+          tag: tag,
+          points: points // Save points
+        });
+      });
+    })
+    .then(() => {
+      // Sign up successful
+      console.log('User data saved successfully');
+      feedbackDiv.classList.remove('hidden');
+    })
+    .catch((error) => {
+      // An error occurred
+      console.error('Error signing up:', error);
+    });
+});
+
+  </script>
+</body>
+</html>
