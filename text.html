@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Main Page</title>
+    <!-- Include Tailwind CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+
+<body class="mx-auto max-w-screen-lg">
+    <nav class="bg-gray-10 mt-8 p-4">
+        <div class="container mx-auto max-w-screen-lg flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <div class="flex -space-x-2 overflow-hidden">
+                    <img class="inline-block h-10 w-10 rounded-full ring-2 ring-white"
+                        src="https://images.unsplash.com/photo-1491528323818-fdd1faba62cc?ixlib=rb-1.2.1&amp;ixid=eyJhcHBfaWQiOjEyMDd9&amp;auto=format&amp;fit=facearea&amp;facepad=2&amp;w=256&amp;h=256&amp;q=80"
+                        alt="" />
+                    <img class="inline-block h-10 w-10 rounded-full ring-2 ring-white"
+                        src="https://images.unsplash.com/photo-1550525811-e5869dd03032?ixlib=rb-1.2.1&amp;auto=format&amp;fit=facearea&amp;facepad=2&amp;w=256&amp;h=256&amp;q=80"
+                        alt="" />
+                    <img class="inline-block h-10 w-10 rounded-full ring-2 ring-white"
+                        src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&amp;ixid=eyJhcHBfaWQiOjEyMDd9&amp;auto=format&amp;fit=facearea&amp;facepad=2.25&amp;w=256&amp;h=256&amp;q=80"
+                        alt="" />
+                    <img class="inline-block h-10 w-10 rounded-full ring-2 ring-white"
+                        src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&amp;ixid=eyJhcHBfaWQiOjEyMDd9&amp;auto=format&amp;fit=facearea&amp;facepad=2&amp;w=256&amp;h=256&amp;q=80"
+                        alt="" />
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div id="userProfile" class="hidden">
+                    <h1 id="userName" class="text-right text-md font-semibold"></h1>
+                    <p id="userCaption" class="text-right text-sm text-gray-00"></p>
+                </div>
+                <div class="flex-shrink-0">
+                    <img id="userProfilePhoto" class="h-10 w-10 rounded-full"
+                        src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&amp;ixid=eyJhcHBfaWQiOjEyMDd9&amp;auto=format&amp;fit=facearea&amp;facepad=2&amp;w=256&amp;h=256&amp;q=80"
+                        alt="Profile Photo">
+                </div>
+                <div class="flex-shrink-0">
+                    <button id="logoutButton"
+                        class="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded hidden">Logout</button>
+                </div>
+
+            </div>
+    </nav>
+
+
+    <footer class="bg-gray-200 text-gray-900 mx-auto text-sm text-center rounded-xl py-5">IIIRNSTUDIO @ 2024</footer>
+    <!-- Navbar -->
+    <nav class="bg-gray-800 p-4 text-white">
+        <div class="container mx-auto flex justify-between items-center">
+            <div>
+                <a href="#" class="font-semibold text-lg">Your Website</a>
+            </div>
+            <div>
+                User Profile Section
+                <div id="userProfile" class="hidden">
+                    <span id="userName"></span>
+                    <span id="userEmail"></span>
+                    <img id="userProfilePhoto" class="h-10 w-10 rounded-full" src="" alt="Profile Photo">
+                    <span id="userCaption"></span>
+                    <span id="userTag"></span>
+                    <span id="userPoints"></span>
+                </div>
+                Logout Button
+                <button id="logoutButton"
+                    class="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded hidden">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Include Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+    <script>
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBEfZKPxqf75KYyi9AWnSwTEoXB_CUIGp0",
+            authDomain: "iiirn-a9b4c.firebaseapp.com",
+            databaseURL: "https://iiirn-a9b4c-default-rtdb.firebaseio.com",
+            projectId: "iiirn-a9b4c",
+            storageBucket: "iiirn-a9b4c.appspot.com",
+            messagingSenderId: "453527572957",
+            appId: "1:453527572957:web:5a28039533fbef81a8e634",
+            measurementId: "G-YLM6GQD6Y0"
+        };
+        firebase.initializeApp(firebaseConfig);
+
+        const auth = firebase.auth();
+        const database = firebase.database();
+
+        // Check user authentication state on page load
+        auth.onAuthStateChanged((user) => {
+            const userProfile = document.getElementById('userProfile');
+            const userName = document.getElementById('userName');
+            const userEmail = document.getElementById('userEmail');
+            const userProfilePhoto = document.getElementById('userProfilePhoto');
+            const userCaption = document.getElementById('userCaption');
+            const userTag = document.getElementById('userTag');
+            const userPoints = document.getElementById('userPoints');
+            const logoutButton = document.getElementById('logoutButton');
+
+            if (user) {
+                // User is logged in
+                userProfile.classList.remove('hidden');
+
+                // Retrieve user data from Realtime Database
+                database.ref('users/' + user.uid).once('value')
+                    .then((snapshot) => {
+                        const userData = snapshot.val();
+                        if (userData) {
+                            // Display user data on the page
+                            userName.textContent = userData.name;
+                            userEmail.textContent = userData.email;
+                            userProfilePhoto.src = userData.profilePhoto;
+                            userCaption.textContent = userData.caption;
+                            userTag.textContent = userData.tag;
+                            userPoints.textContent = userData.points;
+                        } else {
+                            console.log('User data not found');
+                        }
+                    })
+                    .catch((error) => {
+                        console.error('Error retrieving user data:', error);
+                    });
+
+                // Show logout button
+                logoutButton.classList.remove('hidden');
+            } else {
+                // User is not logged in
+                userProfile.classList.add('hidden');
+                // Hide logout button
+                logoutButton.classList.add('hidden');
+            }
+        });
+
+        // Logout Button
+        const logoutButton = document.getElementById('logoutButton');
+        logoutButton.addEventListener('click', () => {
+            auth.signOut().then(() => {
+                // Sign-out successful.
+                console.log('User signed out');
+            }).catch((error) => {
+                // An error happened.
+                console.error('Logout error:', error);
+            });
+        });
+    </script>
+</body>
+
+</html>
