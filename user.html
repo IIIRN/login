@@ -1,1 +1,139 @@
-ี
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+</head>
+<body class="mx-auto max-w-screen-lg p-4">
+    <nav class="bg-gray-10 my-8 py-4">
+        <div class="container mx-auto max-w-screen-lg flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <div class="flex -space-x-2 overflow-hidden">
+                    <div id="profilePhotos" class="flex -space-x-2 overflow-hidden"></div>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <!-- Inside the navigation bar -->
+                <div id="loginForm" class="flex items-center space-x-4">
+                    <input type="text" id="emailInput" placeholder="Email" class="border p-2">
+                    <input type="password" id="passwordInput" placeholder="Password" class="border p-2">
+                    <button id="loginButton"
+                        class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-full">Login</button>
+                </div>
+
+                <div id="userProfile" class="hidden">
+                    <h1 id="userName" class="text-right text-md font-semibold"></h1>
+                    <p id="userCaption" class="text-right text-sm text-gray-00"></p>
+
+                </div>
+                <div class="flex-shrink-0">
+                    <img id="userProfilePhoto" class="h-10 w-10 rounded-full"
+                        src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&amp;ixid=eyJhcHBfaWQiOjEyMDd9&amp;auto=format&amp;fit=facearea&amp;facepad=2&amp;w=256&amp;h=256&amp;q=80"
+                        alt="Profile Photo">
+                </div>
+                <span class="border-2  py-2 px-4 rounded-full" id="userPoints"></span>
+                <div class="flex-shrink-0">
+                    <button id="logoutButton"
+                        class="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-full hidden">x</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <h1 class="text-3xl font-bold mb-4">Blog</h1>
+    <div id="postsContainer" class="grid grid-cols-4 gap-4"></div>
+
+    <!-- Include Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+
+    <script src="firebase-config.js"></script>
+    <script src="js-auth.js"></script>
+    <script>
+        // Reference to the posts collection
+        const postsRef = firebase.database().ref('posts');
+
+        // Call displayPosts function when page loads
+        window.onload = () => {
+            displayPosts();
+        };
+
+        // Function to display posts
+        function displayPosts() {
+            const postsContainer = document.getElementById('postsContainer');
+
+            postsRef.once('value', (snapshot) => {
+                snapshot.forEach((childSnapshot) => {
+                    const post = childSnapshot.val();
+
+                    const postElement = document.createElement('div');
+                    postElement.classList.add('bg-gray-100', 'shadow-md', 'rounded-md', 'p-4', 'mb-4');
+
+                    const titleElement = document.createElement('h2');
+                    titleElement.textContent = post.title;
+                    titleElement.classList.add('text-xl', 'font-bold', 'mb-2');
+
+                    const pointElement = document.createElement('p');
+                    pointElement.textContent = '' + post.point;
+                    pointElement.classList.add('bg-yellow-100', 'text-yellow-800', 'text-xs', 'font-medium', 'me-2', 'px-2.5','py-0.5','rounded-full','dark:bg-yellow-900','dark:text-yellow-300');
+
+                    const coverElement = document.createElement('img');
+                    coverElement.src = post.coverImage;
+                    coverElement.alt = 'Cover Image';
+                    coverElement.classList.add('w-full', 'h-auto', 'mb-2');
+
+                    const catalogElement = document.createElement('p');
+                    catalogElement.textContent = '' + post.catalog;
+                    catalogElement.classList.add('bg-green-100', 'text-green-800', 'text-xs', 'font-medium', 'me-2', 'px-2.5','py-0.5','rounded','dark:bg-green-900','dark:text-green-300');
+
+
+                    const tagsElement = document.createElement('p');
+                    tagsElement.textContent = 'Tags: ' + post.tags.join(', ');
+                    tagsElement.classList.add('bg-blue-100', 'text-blue-800', 'text-xs', 'font-medium', 'me-2', 'px-2.5','py-0.5','rounded','dark:bg-blue-900','dark:text-blue-300');
+                    
+                    const readButton = document.createElement('button');
+                    readButton.textContent = 'แลกแต้ม';
+                    readButton.classList.add('bg-yellow-500', 'hover:bg-yellow-700', 'text-white', 'font-bold','py-2', 'px-4', 'rounded-full', 'mt-2');
+                    readButton.addEventListener('click', () => {
+    // Check if user has enough points to read the content
+    if (userPoints >= post.point) {
+        // Display content if user has enough points
+        postElement.appendChild(contentElement);
+        // Deduct points from user after reading content
+        userPoints -= 5; // Deduct 5 points
+        // Update points display on the page
+        updateUserPointsDisplay(userPoints);
+    } else {
+        // Display notification if user does not have enough points
+        alert('You need more points to read this content.');
+    }
+});
+
+
+                    // ฟังก์ชั่นอัปเดตการแสดงคะแนนของผู้ใช้บนหน้าเว็บ
+                    function updateUserPointsDisplay(points) {
+                        const userPointsElement = document.getElementById('userPoints');
+                        userPointsElement.textContent = points;
+                    }
+
+
+                    postElement.appendChild(titleElement);
+                    postElement.appendChild(pointElement);
+                    postElement.appendChild(coverElement);
+                    postElement.appendChild(catalogElement);
+                    postElement.appendChild(tagsElement);
+                    postElement.appendChild(readButton);
+
+                    postsContainer.appendChild(postElement);
+                });
+            });
+        }
+
+       
+    </script>
+</body>
+
+</html>
