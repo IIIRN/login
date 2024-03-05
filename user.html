@@ -5,6 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blog</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+    <style>
+        /* Additional styles for the gift box */
+        .gift-box {
+            width: 200px;
+            height: 200px;
+            background-color: #f0f0f0;
+            border: 2px solid #ddd;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .gift-box::before {
+            content: '';
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background-color: #ff0;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: -1;
+            display: none;
+        }
+
+        .gift-box.closed::before {
+            display: block;
+        }
+    </style>
 </head>
 <body class="mx-auto max-w-screen-lg p-4">
     <nav class="bg-gray-10 my-8 py-4">
@@ -41,9 +69,7 @@
             </div>
         </div>
     </nav>
-    <h1 class="text-3xl font-bold mb-4">Blog</h1>
-    <div id="postsContainer" class="grid grid-cols-4 gap-4"></div>
-
+    <div id="postsContainer"></div>
     <!-- Include Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -53,87 +79,57 @@
     <script src="firebase-config.js"></script>
     <script src="js-auth.js"></script>
     <script>
-        // Reference to the posts collection
-        const postsRef = firebase.database().ref('posts');
+        
+        // เมื่อหน้าเว็บโหลดเสร็จแล้ว
+        window.onload = function() {
+            // สร้างตัวแปรเพื่อเก็บ reference ของโหนดที่มีข้อมูลโพสต์
+            const postsRef = firebase.database().ref('posts');
 
-        // Call displayPosts function when page loads
-        window.onload = () => {
-            displayPosts();
-        };
+        // ดึงข้อมูลโพสต์จาก Firebase
+        postsRef.once('value', (snapshot) => {
+            snapshot.forEach((childSnapshot) => {
+                const post = childSnapshot.val(); // ข้อมูลของโพสต์
 
-        // Function to display posts
-        function displayPosts() {
-            const postsContainer = document.getElementById('postsContainer');
+        // สร้าง Element สำหรับแสดงโพสต์ในรูปแบบการ์ด
+        const postElement = document.createElement('div');
+        postElement.classList.add('max-w-sm', 'rounded-lg', 'overflow-hidden', 'shadow-lg', 'bg-white', 'mb-4');
 
-            postsRef.once('value', (snapshot) => {
-                snapshot.forEach((childSnapshot) => {
-                    const post = childSnapshot.val();
+        // เพิ่มข้อมูลของโพสต์ลงใน Element
+        postElement.innerHTML = `
+            <img class="w-full" src="${post.coverImage}" alt="Cover Image">
+            <div class="px-6 py-4">
+                <div class="font-bold text-xl mb-2">${post.title}</div>
+                <p class="text-gray-700 text-base">${post.content}</p>
+                <p class="text-gray-700 text-base">Point: ${post.point}</p>
+                <p class="text-gray-700 text-base">Catalog: ${post.catalog}</p>
+                <p class="text-gray-700 text-base">Tags: ${post.tags}</p>
+                <button class="like-btn bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-2">Like</button>
+            </div>
+        `;
 
-                    const postElement = document.createElement('div');
-                    postElement.classList.add('bg-gray-100', 'shadow-md', 'rounded-md', 'p-4', 'mb-4');
+                // เพิ่มโพสต์ลงใน Container ที่มี id เป็น 'postsContainer'
+                document.getElementById('postsContainer').appendChild(postElement);
 
-                    const titleElement = document.createElement('h2');
-                    titleElement.textContent = post.title;
-                    titleElement.classList.add('text-xl', 'font-bold', 'mb-2');
-
-                    const pointElement = document.createElement('p');
-                    pointElement.textContent = '' + post.point;
-                    pointElement.classList.add('bg-yellow-100', 'text-yellow-800', 'text-xs', 'font-medium', 'me-2', 'px-2.5','py-0.5','rounded-full','dark:bg-yellow-900','dark:text-yellow-300');
-
-                    const coverElement = document.createElement('img');
-                    coverElement.src = post.coverImage;
-                    coverElement.alt = 'Cover Image';
-                    coverElement.classList.add('w-full', 'h-auto', 'mb-2');
-
-                    const catalogElement = document.createElement('p');
-                    catalogElement.textContent = '' + post.catalog;
-                    catalogElement.classList.add('bg-green-100', 'text-green-800', 'text-xs', 'font-medium', 'me-2', 'px-2.5','py-0.5','rounded','dark:bg-green-900','dark:text-green-300');
-
-
-                    const tagsElement = document.createElement('p');
-                    tagsElement.textContent = 'Tags: ' + post.tags.join(', ');
-                    tagsElement.classList.add('bg-blue-100', 'text-blue-800', 'text-xs', 'font-medium', 'me-2', 'px-2.5','py-0.5','rounded','dark:bg-blue-900','dark:text-blue-300');
-                    
-                    const readButton = document.createElement('button');
-                    readButton.textContent = 'แลกแต้ม';
-                    readButton.classList.add('bg-yellow-500', 'hover:bg-yellow-700', 'text-white', 'font-bold','py-2', 'px-4', 'rounded-full', 'mt-2');
-                    readButton.addEventListener('click', () => {
-    // Check if user has enough points to read the content
-    if (userPoints >= post.point) {
-        // Display content if user has enough points
-        postElement.appendChild(contentElement);
-        // Deduct points from user after reading content
-        userPoints -= 5; // Deduct 5 points
-        // Update points display on the page
-        updateUserPointsDisplay(userPoints);
-    } else {
-        // Display notification if user does not have enough points
-        alert('You need more points to read this content.');
-    }
-});
-
-
-                    // ฟังก์ชั่นอัปเดตการแสดงคะแนนของผู้ใช้บนหน้าเว็บ
-                    function updateUserPointsDisplay(points) {
-                        const userPointsElement = document.getElementById('userPoints');
-                        userPointsElement.textContent = points;
+                // เพิ่ม Event Listener สำหรับปุ่ม "ถูกใจ"
+                const likeButton = postElement.querySelector('.like-btn');
+                likeButton.addEventListener('click', () => {
+                    // ลดจำนวนแต้มตาม post.point
+                    const currentPoints = post.point;
+                    if (currentPoints > 0) {
+                        // สามารถลดแต้มได้เมื่อยังมีแต้มคงเหลือ
+                        const updatedPoints = currentPoints - 1;
+                        // อัปเดตค่าในฐานข้อมูล Firebase
+                        childSnapshot.ref.update({ point: updatedPoints });
+                        // แสดงข้อความหลังจากลดแต้มแล้ว
+                        console.log('Liked! Points deducted: 1');
+                    } else {
+                        // แสดงข้อความเมื่อไม่สามารถลดแต้มได้
+                        console.log('You do not have enough points to like this post.');
                     }
-
-
-                    postElement.appendChild(titleElement);
-                    postElement.appendChild(pointElement);
-                    postElement.appendChild(coverElement);
-                    postElement.appendChild(catalogElement);
-                    postElement.appendChild(tagsElement);
-                    postElement.appendChild(readButton);
-
-                    postsContainer.appendChild(postElement);
                 });
             });
+        });
         }
-
-       
     </script>
 </body>
-
 </html>
