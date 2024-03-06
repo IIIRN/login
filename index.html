@@ -1,138 +1,152 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login and Profile</title>
-  <!-- Include Tailwind CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+    <style>
+        /* Additional styles for the gift box */
+        .gift-box {
+            width: 200px;
+            height: 200px;
+            background-color: #f0f0f0;
+            border: 2px solid #ddd;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .gift-box::before {
+            content: '';
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background-color: #ff0;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: -1;
+            display: none;
+        }
+
+        .gift-box.closed::before {
+            display: block;
+        }
+    </style>
 </head>
-<body class="bg-gray-100 p-4">
-  <div class="max-w-md mx-auto bg-white p-8 rounded shadow-md">
-    <h2 class="text-2xl font-semibold mb-6">Login</h2>
+<body class="mx-auto max-w-screen-lg p-4">
+    <nav class="bg-gray-10 my-8 py-4">
+        <div class="container mx-auto max-w-screen-lg flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <div class="flex -space-x-2 overflow-hidden">
+                    <div id="profilePhotos" class="flex -space-x-2 overflow-hidden"></div>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <!-- Inside the navigation bar -->
+                <div id="loginForm" class="flex items-center space-x-4">
+                    <input type="text" id="emailInput" placeholder="Email" class="border p-2">
+                    <input type="password" id="passwordInput" placeholder="Password" class="border p-2">
+                    <button id="loginButton"
+                        class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-full">Login</button>
+                </div>
 
-    <!-- Login Form -->
-    <form id="loginForm" class="mb-4">
-      <div class="mb-4">
-        <label for="email" class="block text-gray-700">Email:</label>
-        <input type="email" id="email" name="email" class="form-input mt-1 block w-full" placeholder="Enter your email" required>
-      </div>
-      <div class="mb-4">
-        <label for="password" class="block text-gray-700">Password:</label>
-        <input type="password" id="password" name="password" class="form-input mt-1 block w-full" placeholder="Enter your password" required>
-      </div>
-      <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">Login</button>
-    </form>
+                <div id="userProfile" class="hidden">
+                    <h1 id="userName" class="text-right text-md font-semibold"></h1>
+                    <p id="userCaption" class="text-right text-sm text-gray-00"></p>
 
-    <!-- Profile Data -->
-    <div id="profileData" class="hidden">
-      <h2 class="text-2xl font-semibold mb-4">Profile Data</h2>
-      <p><strong>User ID:</strong> <span id="userId"></span></p>
-      <p><strong>Email:</strong> <span id="userEmail"></span></p>
-      <p><strong>Points:</strong> <span id="userPoints"></span></p>
-      <button id="logoutButton" class="bg-red-500 text-white py-2 px-4 rounded mt-4 hover:bg-red-600">Logout</button>
-    </div>
-  </div>
-  
+                </div>
+                <div class="flex-shrink-0">
+                    <img id="userProfilePhoto" class="h-10 w-10 rounded-full"
+                        src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&amp;ixid=eyJhcHBfaWQiOjEyMDd9&amp;auto=format&amp;fit=facearea&amp;facepad=2&amp;w=256&amp;h=256&amp;q=80"
+                        alt="Profile Photo">
+                </div>
+                <span class="border-2  py-2 px-4 rounded-full" id="userPoints"></span>
+                <div class="flex-shrink-0">
+                    <button id="logoutButton"
+                        class="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-full hidden">x</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <div class="grid grid-cols-4 gap-4" id="postsContainer"></div>
+    <!-- Include Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 
-  <!-- Include Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="js-auth.js"></script>
+    <script>
+       let userId = null; // เก็บ ID ของผู้ใช้ที่ล็อกอิน
 
-  <script>
-    // Initialize Firebase
-    const firebaseConfig = {
-      apiKey: "AIzaSyBEfZKPxqf75KYyi9AWnSwTEoXB_CUIGp0",
-        authDomain: "iiirn-a9b4c.firebaseapp.com",
-        databaseURL: "https://iiirn-a9b4c-default-rtdb.firebaseio.com",
-        projectId: "iiirn-a9b4c",
-        storageBucket: "iiirn-a9b4c.appspot.com",
-        messagingSenderId: "453527572957",
-        appId: "1:453527572957:web:5a28039533fbef81a8e634",
-        measurementId: "G-YLM6GQD6Y0"
-    };
-    firebase.initializeApp(firebaseConfig);
-
-    const auth = firebase.auth();
-    const database = firebase.database();
-
-    // Login Form Submission
-    const loginForm = document.getElementById('loginForm');
-    loginForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const email = loginForm['email'].value;
-      const password = loginForm['password'].value;
-
-      // Sign in user with email and password
-      auth.signInWithEmailAndPassword(email, password)
-        .then((userCredential) => {
-          const user = userCredential.user;
-          console.log('User logged in:', user);
-
-          // Display profile data after successful login
-          displayProfileData(user);
-        })
-        .catch((error) => {
-          const errorCode = error.code;
-          const errorMessage = error.message;
-          console.error('Login error:', errorCode, errorMessage);
-        });
-    });
-
-    // Logout Button
-    const logoutButton = document.getElementById('logoutButton');
-    logoutButton.addEventListener('click', () => {
-      auth.signOut().then(() => {
-        // Sign-out successful.
-        console.log('User signed out');
-        // Remove user data from local storage
-        localStorage.removeItem('user');
-        // Hide profile data and show login form
-        document.getElementById('profileData').classList.add('hidden');
-        document.getElementById('loginForm').classList.remove('hidden');
-      }).catch((error) => {
-        // An error happened.
-        console.error('Logout error:', error);
-      });
-    });
-
-    // Function to display profile data after login
-    function displayProfileData(user) {
-      const profileDataDiv = document.getElementById('profileData');
-      const userIdSpan = document.getElementById('userId');
-      const userEmailSpan = document.getElementById('userEmail');
-      const userPointsSpan = document.getElementById('userPoints');
-
-      // Get user data from Firebase Realtime Database
-      database.ref('users/' + user.uid).once('value')
-        .then((snapshot) => {
-          const userData = snapshot.val();
-          userIdSpan.textContent = user.uid;
-          userEmailSpan.textContent = user.email;
-          userPointsSpan.textContent = userData.points;
-          profileDataDiv.classList.remove('hidden');
-          // Hide login form
-          loginForm.classList.add('hidden');
-          // Save user data to local storage
-          localStorage.setItem('user', JSON.stringify(user));
-        })
-        .catch((error) => {
-          console.error('Error getting user data:', error);
-        });
+// ตรวจสอบการล็อกอินของผู้ใช้
+firebase.auth().onAuthStateChanged(function(user) {
+    if (user) {
+        userId = user.uid; // กำหนด userId เมื่อผู้ใช้ล็อกอิน
+    } else {
+        userId = null;
     }
+});
 
-    // Check user authentication state on page load
-    document.addEventListener('DOMContentLoaded', () => {
-      const user = JSON.parse(localStorage.getItem('user'));
-      if (user) {
-        // User is logged in, display profile data
-        displayProfileData(user);
-      } else {
-        // User is not logged in, display login form
-        document.getElementById('loginForm').classList.remove('hidden');
-      }
+// ดึงข้อมูลโพสต์จาก Firebase
+const postsRef = firebase.database().ref('posts');
+postsRef.once('value', (snapshot) => {
+    snapshot.forEach((childSnapshot) => {
+        const post = childSnapshot.val(); // ข้อมูลของโพสต์
+
+        // สร้าง Element สำหรับแสดงโพสต์ในรูปแบบการ์ด
+        const postElement = document.createElement('div');
+        postElement.classList.add('max-w-sm', 'rounded-lg', 'overflow-hidden', 'shadow-lg', 'bg-white', 'mb-4');
+
+        // เพิ่มข้อมูลของโพสต์ลงใน Element
+        postElement.innerHTML = `
+    <!-- เริ่มต้นการวน loop เพื่อแสดงโพสต์ -->
+        <img class="w-full" src="${post.coverImage}" alt="Cover Image">
+        <div class="px-6 py-4">
+            <div class="font-bold text-xl mb-2">${post.title}</div>
+            <p class="text-gray-700 text-base">${post.content}</p>
+            <p class="text-gray-700 text-base">Point: ${post.point}</p>
+            <button class="like-btn bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-2">Like</button>
+        </div>
+
+    <!-- จบการวน loop -->
+
+
+        `;
+
+        // เพิ่มโพสต์ลงใน Container ที่มี id เป็น 'postsContainer'
+        document.getElementById('postsContainer').appendChild(postElement);
+
+        // เพิ่ม Event Listener สำหรับปุ่ม "ถูกใจ"
+        const likeButton = postElement.querySelector('.like-btn');
+        likeButton.addEventListener('click', async () => {
+            if (userId) {
+                const userRef = firebase.database().ref('users/' + userId);
+                userRef.once('value', (snapshot) => {
+                    const userData = snapshot.val();
+                    const currentPoints = userData.points; // จำนวนแต้มปัจจุบันของผู้ใช้
+                    const postPoints = post.point; // จำนวนแต้มที่ต้องการหัก
+
+                    // ตรวจสอบว่าผู้ใช้มีแต้มเพียงพอหรือไม่
+                    if (currentPoints >= postPoints) {
+                        const updatedPoints = currentPoints - postPoints;
+                        userRef.update({ points: updatedPoints });
+
+                        console.log('Liked! Points deducted:', postPoints);
+                    } else {
+                        console.log('You do not have enough points to like this post.');
+                    }
+                });
+            } else {
+                console.log('User is not logged in.');
+            }
+        });
     });
-  </script>
+});
+
+    </script>
 </body>
 </html>
+
